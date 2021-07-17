@@ -4,13 +4,17 @@ const { signToken } = require('../utils/auth');
 
 const resolvers = {
     Query: {
-        thoughts: async (parent, { username }) => {
-            const params = username ? { username } : {};
-            return Thought.find(params).sort({ createdAt: -1 });
-        },
+        me: async (parent, args, context) => {
+            if (context.user) {
+                const userData = await User.findOne({ _id: context.user._id })
+                    .select('-__v -password')
+                    .populate('thoughts')
+                    .populate('friends')
 
-        thought: async (parent, { _id }) => {
-            return Thought.findOne({ _id });
+                return userData;
+            }
+
+            throw new AuthenticationError('Not logged in');
         },
         // get all users
         users: async () => {
@@ -26,18 +30,15 @@ const resolvers = {
                 .populate('friends')
                 .populate('thoughts')
         },
-        me: async (parent, args, context) => {
-            if (context.user) {
-                const userData = await User.findOne({ _id: context.user._id })
-                    .select('-__v -password')
-                    .populate('thoughts')
-                    .populate('friends')
+        thoughts: async (parent, { username }) => {
+            const params = username ? { username } : {};
+            return Thought.find(params).sort({ createdAt: -1 });
+        },
 
-                return userData;
-            }
-
-            throw new AuthenticationError('Not logged in');
-        }
+        thought: async (parent, { _id }) => {
+            return Thought.findOne({ _id });
+        },
+        
     },
     Mutation: {
         addUser: async (parent, args) => {
