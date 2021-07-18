@@ -2,6 +2,7 @@ import React from 'react';
 
 import { ApolloProvider } from '@apollo/react-hooks';
 import ApolloClient from 'apollo-boost';
+import { setContext } from '@apollo/client/link/context';
 
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 
@@ -16,6 +17,15 @@ import Profile from './pages/Profile';
 import Signup from './pages/Signup';
 
 const client = new ApolloClient({
+  request: operation => {
+    const token = localStorage.getItem('id_token');
+
+    operation.setContext({
+      headers: {
+        authorization: token ? `Bearer ${token}` : ''
+      }
+    });
+  },
   uri: '/graphql'
 });
 
